@@ -1,4 +1,4 @@
-PATH_TOOLCHAIN_FILE="../obdh_v0_defs/toolchain-nucleo-f767-freertos.cmake"
+PATH_TOOLCHAIN_FILE="../tests_defs/toolchain-nucleo-f767-freertos.cmake"
 BUILD_DIR="build_osal-tests-nucleo-f767-freertos"
 
 

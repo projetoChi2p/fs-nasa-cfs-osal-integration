@@ -1,4 +1,4 @@
-PATH_TOOLCHAIN_FILE="../obdh_v0_defs/toolchain-i386-freertos-linux.cmake"
+PATH_TOOLCHAIN_FILE="../tests_defs/toolchain-i386-freertos-linux.cmake"
 BUILD_DIR="build_osal-linux-freertos"
 
 
