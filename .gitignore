@@ -29,7 +29,7 @@
 *.dylib
 
 # build folders
-buid_*
+build_*
 
 # Executables
 *.exe
