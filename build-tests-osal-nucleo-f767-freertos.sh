@@ -14,4 +14,4 @@ cmake \
     -DOSAL_CONFIG_DEBUG_PRINTF=true \
     ../osal
 
-make -j 6
+make
