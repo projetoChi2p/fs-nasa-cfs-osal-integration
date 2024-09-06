@@ -28,3 +28,8 @@ Submodule path 'tools/tblCRCTool': checked out '42de9c416750e5c92575c74755fc4462
 
 
 ```
+## Setup
+
+Ensure the following software are installed: Make, CMake, GCC, Arm GNU Toolchain and Git.
+    git submodule init
+    git submodule update
