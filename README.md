@@ -25,6 +25,7 @@ To program the NUCLEO-F767ZI
 
     openocd -s /usr/share/openocd/scripts/  --file board/stm32f7discovery.cfg --command "hla_serial ID_SERIAL_SHORT; program path/to/program.elf verify reset exit"
 
+
 The initial version of this repository was based on NASA cFS sample mission bundle (https://github.com/nasa/cFS) equuleus-rc1 **plus** developments up to 2024-01-31 with the following commit signatures:
 
 ```
@@ -48,8 +49,3 @@ Submodule path 'tools/tblCRCTool': checked out '42de9c416750e5c92575c74755fc4462
 
 
 ```
-## Setup
-
-Ensure the following software are installed: Make, CMake, GCC, Arm GNU Toolchain and Git.
-    git submodule init
-    git submodule update
