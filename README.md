@@ -12,7 +12,7 @@ It works similar to the NASA cFS sample mission bundle (https://github.com/nasa/
     git submodule update
 
 # Build
-The unit tests build process is simplified by the scripts, to have more information about it, check the official cFS documentation.
+The unit tests build process is simplified by the scripts. For more information, check the official cFS documentation.
 
     ./build-tests-osal-nucleo-f767-freertos.sh
 
