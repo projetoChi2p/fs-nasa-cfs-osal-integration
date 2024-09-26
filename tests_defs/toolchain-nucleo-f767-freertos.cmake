@@ -176,7 +176,7 @@ include_directories(${OSAL_SOURCE_DIR}/src/bsp/${OSAL_SYSTEM_BSPTYPE}/vendor/STM
 
 
 # Include FreeRTOSConfig.h
-include_directories(${OSAL_SOURCE_DIR}/../obdh_tests_defs/)
+include_directories(${OSAL_SOURCE_DIR}/../tests_defs/)
 
  set(COMPILER_LINKER_OPTION_PREFIX "-Wl,")
  set(START_WHOLE_ARCHIVE "--whole-archive")
