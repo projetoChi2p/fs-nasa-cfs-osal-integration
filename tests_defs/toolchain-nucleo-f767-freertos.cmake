@@ -101,9 +101,8 @@ GET_FILENAME_COMPONENT(CFE_SOURCE_DIR      "${TOP_PROJECT_DIR}/cfe"         REAL
 # -mfloat-abi=hard -mfpu=fpv4-sp-d16
 
 
-set(OSAL_FREERTOS_INC_DIR          "${THIRDPARTY_DIR}/include-freertos-v10.2.1-stm32cubel4")
+set(OSAL_FREERTOS_INC_DIR          "${THIRDPARTY_DIR}/freertos-v10.2.1-stm32cubel4/include")
 set(OSAL_FREERTOS_SRC_DIR          "${THIRDPARTY_DIR}/freertos-v10.2.1-stm32cubel4")
-#set(OSAL_FREERTOS_CONFIG_H_DIR     "${THIRDPARTY_DIR}/bsp-pc-linux-i386/inc")
 set(OSAL_FREERTOS_PLUS_FAT_SRC_DIR "${THIRDPARTY_DIR}/freertos-plus-fat-2024-01-25-dev")
 
 message("+++ Using MY_MISSION_DEFS_DIR '${MY_MISSION_DEFS_DIR}'.")
@@ -148,7 +147,7 @@ set(OSAL_SYSTEM_OSTYPE      "freertos")
 #set(GDB_FLAGS "-g3 -O0 -fdebug-prefix-map=${DOCKER_CONTAINER_PROJECT_DIR}=${DOCKER_HOST_PROJECT_DIR}")
 set(GDB_FLAGS "-g3 -O1")
 set(MCPU_FLAGS "-mcpu=cortex-m7 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16")
-set(CMAKE_C_FLAGS "${GDB_FLAGS} ${MCPU_FLAGS} ${VFP_FLAGS} -Wall -fno-builtin -std=gnu11 -fmessage-length=0 -ffunction-sections -fdata-sections" CACHE INTERNAL "c compiler flags" FORCE)
+set(CMAKE_C_FLAGS "${GDB_FLAGS} ${MCPU_FLAGS} ${VFP_FLAGS} -Wall -fno-builtin -std=gnu11 -fmessage-length=0 -ffunction-sections -fdata-sections " CACHE INTERNAL "c compiler flags" FORCE)
 set(CMAKE_CXX_FLAGS "${GDB_FLAGS} ${MCPU_FLAGS} ${VFP_FLAGS} -Wall -fno-builtin -fmessage-length=0 -ffunction-sections -fdata-sections" CACHE INTERNAL "cxx compiler flags")
 set(CMAKE_ASM_FLAGS "${GDB_FLAGS} ${MCPU_FLAGS} -x assembler-with-cpp" CACHE INTERNAL "asm compiler flags")
 #set(CMAKE_EXE_LINKER_FLAGS "-specs=nano.specs --specs=rdimon.specs -lc -lrdimon" CACHE INTERNAL "exe link flags" FORCE)
@@ -178,14 +177,8 @@ include_directories(${OSAL_SOURCE_DIR}/src/bsp/${OSAL_SYSTEM_BSPTYPE}/vendor/STM
 # Include FreeRTOSConfig.h
 include_directories(${OSAL_SOURCE_DIR}/../tests_defs/)
 
- set(COMPILER_LINKER_OPTION_PREFIX "-Wl,")
- set(START_WHOLE_ARCHIVE "--whole-archive")
- set(STOP_WHOLE_ARCHIVE  "--no-whole-archive")
- set(START_WHOLE_ARCHIVE "${COMPILER_LINKER_OPTION_PREFIX}${START_WHOLE_ARCHIVE}")
- set(STOP_WHOLE_ARCHIVE "${COMPILER_LINKER_OPTION_PREFIX}${STOP_WHOLE_ARCHIVE}")
-
-# FBV 2024-02-28 The include_directories below is only for debugging and should removed from final build.
-include_directories(${CFE_SOURCE_DIR}/modules/es/fsw/src)
-include_directories(${CFE_SOURCE_DIR}/modules/core_private/fsw/inc)
-include_directories(${CFE_SOURCE_DIR}/modules/msg/fsw/inc)
-include_directories(${CFE_SOURCE_DIR}/modules/core_api/fsw/inc)
+set(COMPILER_LINKER_OPTION_PREFIX "-Wl,")
+set(START_WHOLE_ARCHIVE "--whole-archive")
+set(STOP_WHOLE_ARCHIVE  "--no-whole-archive")
+set(START_WHOLE_ARCHIVE "${COMPILER_LINKER_OPTION_PREFIX}${START_WHOLE_ARCHIVE}")
+set(STOP_WHOLE_ARCHIVE "${COMPILER_LINKER_OPTION_PREFIX}${STOP_WHOLE_ARCHIVE}")
