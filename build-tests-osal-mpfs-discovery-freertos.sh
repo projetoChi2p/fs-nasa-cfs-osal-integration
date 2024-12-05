@@ -5,8 +5,8 @@ THIS_SCRIPT_FULLNAME=$(realpath "$THIS_SCRIPT")
 THIS_SCRIPT=$(basename "${THIS_SCRIPT_FULLNAME}")
 ROOT_DIR=$(dirname "$THIS_SCRIPT_FULLNAME")
 
-PATH_TOOLCHAIN_FILE="../tests_defs/toolchain-i386-freertos-linux.cmake"
-BUILD_DIR="build_osal-tests-linux-freertos"
+PATH_TOOLCHAIN_FILE="../tests_defs/toolchain-mpfs-discovery-freertos.cmake"
+BUILD_DIR="build_osal-tests-mpfs-discovery-freertos"
 
 cd ${ROOT_DIR}
 
@@ -45,6 +45,7 @@ cmake \
     -DOSAL_CONFIG_DEBUG_PRINTF=true \
     -DCMAKE_BUILD_TYPE=Debug \
     -G "Unix Makefiles" \
+    --trace \
     ../osal
 
 make ${TARGET_PROG}

@@ -1,7 +1,8 @@
 /*
  * FreeRTOS
- *
+ * FreeRTOS V202212.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ * Copyright (C) 2021 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  * Copyright (C) 2021 Patrick Paul
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -28,42 +29,210 @@
  *
  */
 
+
 #ifndef __HEADER_FREERTOSCONFIG_H__
 #define __HEADER_FREERTOSCONFIG_H__
 
 
+
 #if (defined(__arm__) && !defined(__linux__) && defined(__GNUC__))
+
+// http://patorjk.com/software/taag/#f=Colossal
+//        d8888 8888888b.  888b     d888        .d8888b.                   888                            888b     d888       
+//       d88888 888   Y88b 8888b   d8888       d88P  Y88b                  888                            8888b   d8888       
+//      d88P888 888    888 88888b.d88888       888    888                  888                            88888b.d88888       
+//     d88P 888 888   d88P 888Y88888P888       888         .d88b.  888d888 888888  .d88b.  888  888       888Y88888P888       
+//    d88P  888 8888888P"  888 Y888P 888       888        d88""88b 888P"   888    d8P  Y8b `Y8bd8P'       888 Y888P 888       
+//   d88P   888 888 T88b   888  Y8P  888       888    888 888  888 888     888    88888888   X88K  888888 888  Y8P  888       
+//  d8888888888 888  T88b  888   "   888       Y88b  d88P Y88..88P 888     Y88b.  Y8b.     .d8""8b.       888   "   888       
+// d88P     888 888   T88b 888       888        "Y8888P"   "Y88P"  888      "Y888  "Y8888  888  888       888       888    
 
 #include <stdint.h>
 #include <stm32f767xx.h>
 extern uint32_t SystemCoreClock;
+#define TimebaseClock SystemCoreClock
 #define PLATFORM_STACK_MIN 128
 #define PLATFORM_HEAP_SIZE (150 * 1024) //(211 * 1024)
 
+#ifdef __NVIC_PRIO_BITS
+#define configPRIO_BITS         __NVIC_PRIO_BITS
+#else
+#error Unknown/Unsupported/Untested target platform
+#endif
+
+// handlers
+#define xPortPendSVHandler                              PendSV_Handler
+#define vPortSVCHandler                                 SVC_Handler
+#define xPortSysTickHandler                             SysTick_Handler
+
+
 #elif (defined(__i386__) && defined(__linux__) && defined(__GNUC__))
+
+// http://patorjk.com/software/taag/#f=Colossal
+// 8888888b.   .d88888b.   .d8888b. 8888888 Y88b   d88P 
+// 888   Y88b d88P" "Y88b d88P  Y88b  888    Y88b d88P  
+// 888    888 888     888 Y88b.       888     Y88o88P   
+// 888   d88P 888     888  "Y888b.    888      Y888P    
+// 8888888P"  888     888     "Y88b.  888      d888b    
+// 888        888     888       "888  888     d88888b   
+// 888        Y88b. .d88P Y88b  d88P  888    d88P Y88b  
+// 888         "Y88888P"   "Y8888P" 8888888 d88P   Y88b 
 
 #include <pthread.h> 
 #include <limits.h>
+
+/* FBV 2024-11-30 Where is SystemCoreClock???
+ * @TODO Missing extern uint32_t SystemCoreClock ???
+ */
+
+#define TimebaseClock SystemCoreClock
+
 /* The stack size being passed is equal to the minimum stack size needed by pthread_create(). */
 #define PLATFORM_STACK_MIN PTHREAD_STACK_MIN
-#define PLATFORM_HEAP_SIZE (1024 * 1024)
+#define PLATFORM_HEAP_SIZE ( (size_t)((256*1024)+(2048*512)) )
+
+#define configPRIO_BITS         4        /* 15 priority levels */
+
+
+#elif (defined(__riscv) && (__riscv_xlen == 64) && !defined(__linux__) && defined(__GNUC__))
+
+// http://patorjk.com/software/taag/#f=Colossal
+// 8888888b.  8888888  .d8888b.   .d8888b.       888     888        .d8888b.      d8888  
+// 888   Y88b   888   d88P  Y88b d88P  Y88b      888     888       d88P  Y88b    d8P888  
+// 888    888   888   Y88b.      888    888      888     888       888          d8P 888  
+// 888   d88P   888    "Y888b.   888             Y88b   d88P       888d888b.   d8P  888  
+// 8888888P"    888       "Y88b. 888              Y88b d88P        888P "Y88b d88   888  
+// 888 T88b     888         "888 888    888 888888 Y88o88P         888    888 8888888888 
+// 888  T88b    888   Y88b  d88P Y88b  d88P         Y888P          Y88b  d88P       888  
+// 888   T88b 8888888  "Y8888P"   "Y8888P"           Y8P            "Y8888P"        888  
+
+/* PolarFire HAL includes. */
+#include "mpfs_hal/mss_hal.h"
+#include "drivers/mss/mss_mmuart/mss_uart.h"
+
+
+/* FBV 2024-11-30 Ambiguity on CLINT timebase frequency.
+ *
+ * For SiFive/Rocket Chip CPU, CLINT MTIME depends on rtcTick.
+ * rtcTick (via clint.module.io.rtcTick) comes from RTC module.
+ * rtcTick depends on rtcFreq, which comes from DTSTimebase.
+ * 
+ * From SiFive github repo, the frequency would be 1000000 Hz
+ * in Freedom Unleashed U500, and 32768 for Freedom Everywhere E300.
+ * 
+ * However, in FreeRTOS/Demo/RISC-V_RV64_PolarFire_SoftConsole/FreeRTOSConfig.h
+ * configCPU_CLOCK_HZ is defined as 32768.
+ * Under FreeRTOS/Demo, configCPU_CLOCK_HZ is 32768 also for HiFive 1 RISC-V 32 
+ * bits but 1000000 for SiFive e310.
+ * 
+ * Baremetal samples from Microchip using MTIME and MTIMECMP rely on 
+ * LIBERO_SETTING_MSS_RTC_TOGGLE_CLK for RTC frequency, with default
+ * value 1000000, which is consistent with U500 source code.
+ *
+ * For the MPFS design configured with PFSoC configurator, the 
+ * LIBERO_SETTING_MSS_RTC_TOGGLE_CLK value also is default 1000000.
+ *
+ * PFSoC configurator informs that the clock souce for RTC is
+ * shared with Ethernet MAC, which was configured to dedicated
+ * clock (REFCLK) at I/O bank 5 at 125 MHz.
+ * The Libero design using this REFCLK show consistency with other known
+ * clocks, e.g. the 50 MHz Fabric clock.
+ * 
+ * Finally, there is example code from Microchip indicating that clock
+ * divisor for RTC is reconfigurable at run-time by means of the
+ * RTC_CLOCK_CR peripheral register.
+ * At Microchip example code the RTC_CLOCK_CR is set as
+ * LIBERO_SETTING_MSS_EXT_SGMII_REF_CLK/LIBERO_SETTING_MSS_RTC_TOGGLE_CLK.
+ * 
+ * This is also implemented in set_RTC_divisor() from PLL driver.
+ * Inspection of RTC_CLOCK_CR on boot confirmed that divisor is 125 and
+ * RTC clock is 1000000 Hz.
+ * 
+ */
+#define TimebaseClock LIBERO_SETTING_MSS_RTC_TOGGLE_CLK
+
+#define PLATFORM_STACK_MIN ((unsigned short )512)
+/* FBV 2024-11-30 When built for OSAL tests, symbol API test requires 
+   a RAMDISK with 2048 blocks of 512 bytes.
+   For OSAL tests:
+   - OSAL tests RAMDISK ranges from 20 to 2048 blocks:
+     - File API test uses 200 blocks
+     - Shell test uses 20 blocks
+     - Symbol API test uses 2000 blocks
+     - Setup filesystem test uses 128 blocks
+     - Some other tests use uses 20 blocks
+   - OSAL tests RAMDISKs are all dynamically allocated, hence 
+     reside in FreeRTOS heap
+   For cFS/cFE:
+   - The minimal cFE RAMDISK is 128 blocks.
+   - cFS RAMDISK resides in static PSP reserved memory region, 
+     aside CDS, Boot record, etc.
+ */
+//#define PLATFORM_HEAP_SIZE                   ( ( size_t ) ( 700 * 1024 ) )
+#define PLATFORM_HEAP_SIZE                      ( (size_t)((256*1024)+(2048*512)) )
+
+#define CLINT_CTRL_ADDR                         ( 0x02000000UL )
+#define configMTIME_BASE_ADDRESS                ( CLINT_CTRL_ADDR + 0xBFF8UL )
+#define configMTIMECMP_BASE_ADDRESS             ( CLINT_CTRL_ADDR + 0x4000UL )
+
+/* FBV 2014-12-1 on stack checking and stack used by ISRs
+ * When configISR_STACK_SIZE_WORDS is defined, then an static array is allocated
+ * Otherwise, ISR stack rely on __freertos_irq_stack_top symbol defined 
+ * in .ld linker script.
+ *
+ * ISR stack overflow checking is only feasible when using
+ * configISR_STACK_SIZE_WORDS.
+ *
+ */
+/* For RV64 stack word is uint64_t */
+#define configISR_STACK_SIZE_WORDS  ( 1024/8 )
+
+#define configAPPLICATION_ALLOCATED_HEAP 1
+
+
+// #define configQUEUE_REGISTRY_SIZE               8
+// #define configTIMER_QUEUE_LENGTH                8
+// #define configIDLE_SHOULD_YIELD                 0
+// #define configUSE_PORT_OPTIMISED_TASK_SELECTION 1
+
+// CUSTOM define UNUSED in this app
+// /* Task priorities.  Allow these to be overridden. */
+// #ifndef uartPRIMARY_PRIORITY
+//     #define uartPRIMARY_PRIORITY                ( configMAX_PRIORITIES - 3 )
+// #endif
+
+
+// Default is 0
+//#define configUSE_APPLICATION_TASK_TAG          0
+// Default is 0
+//#define configGENERATE_RUN_TIME_STATS           0
+
+// Default is 0
+#define configUSE_QUEUE_SETS                    1
+// Default is 1
+#define configTASK_NOTIFICATION_ARRAY_ENTRIES   3
+
 
 #else
+
 #error Unknown/Unsupported/Untested target platform/compiler
 #endif
 
+
+// http://patorjk.com/software/taag/#f=Colossal
+//  .d8888b.                                                         
+// d88P  Y88b                                                        
+// 888    888                                                        
+// 888         .d88b.  88888b.d88b.  88888b.d88b.   .d88b.  88888b.  
+// 888        d88""88b 888 "888 "88b 888 "888 "88b d88""88b 888 "88b 
+// 888    888 888  888 888  888  888 888  888  888 888  888 888  888 
+// Y88b  d88P Y88..88P 888  888  888 888  888  888 Y88..88P 888  888 
+//  "Y8888P"   "Y88P"  888  888  888 888  888  888  "Y88P"  888  888 
 
 #ifndef portINLINE
 #define portINLINE         __inline
 #endif
 
-
-#ifdef __NVIC_PRIO_BITS
-#define configPRIO_BITS         __NVIC_PRIO_BITS
-#else
-#define configPRIO_BITS         4        /* 15 priority levels */
-// #error Unknown/Unsupported/Untested target platform
-#endif
 
 
 // debugging
@@ -80,8 +249,8 @@ extern void vAssertCalled( const char * const pcFileName,
 #define configUSE_TRACE_FACILITY                        1
 
 // clock
-#define configCPU_CLOCK_HZ                              (SystemCoreClock)
-#define configTICK_RATE_HZ                              ((TickType_t) 1000)
+#define configCPU_CLOCK_HZ                              ( TimebaseClock )
+#define configTICK_RATE_HZ                              ( (TickType_t)1000 )
 
 // memory
 #define configSUPPORT_DYNAMIC_ALLOCATION                1
@@ -89,22 +258,26 @@ extern void vAssertCalled( const char * const pcFileName,
 #define configTOTAL_HEAP_SIZE                           PLATFORM_HEAP_SIZE
 #define configMINIMAL_STACK_SIZE                        ( ( unsigned short ) PLATFORM_STACK_MIN )
 
-#define configTIMER_TASK_STACK_DEPTH                    (configMINIMAL_STACK_SIZE * 2)
+#define configTIMER_TASK_STACK_DEPTH                    ( configMINIMAL_STACK_SIZE )
 
-#define configCHECK_FOR_STACK_OVERFLOW                  1
+
+/* FBV 2014-12-1 on stack checking and stack used by ISRs
+ * Method 1: check if stack pointer within stack region range
+ * Method 2: fill end of stack with canary and check
+ * Methos 3: same as 2, including ISR stack 
+ * - For task stack canary seems to be 0xa5 (tskSTACK_FILL_BYTE)
+ * - For ISR stack canary seems to be 0xee (portISR_STACK_FILL_BYTE)
+ * Checking on ISR stack depends on configCHECK_FOR_STACK_OVERFLOW>2 AND 
+ * explictly allocated ISR stack via configISR_STACK_SIZE_WORDS.
+ */
+
+#define configCHECK_FOR_STACK_OVERFLOW                  3
 
 // hooks
 #define configUSE_DAEMON_TASK_STARTUP_HOOK              0
 #define configUSE_IDLE_HOOK                             0
 #define configUSE_MALLOC_FAILED_HOOK                    1  // https://www.freertos.org/a00016.html
 #define configUSE_TICK_HOOK                             1
-
-// handlers
-#if (defined(__arm__) && !defined(__linux__))
-#define xPortPendSVHandler                              PendSV_Handler
-#define vPortSVCHandler                                 SVC_Handler
-#define xPortSysTickHandler                             SysTick_Handler
-#endif
 
 // additional functions
 #define INCLUDE_eTaskGetState                           1
@@ -147,7 +320,7 @@ extern void vAssertCalled( const char * const pcFileName,
 #define configUSE_PREEMPTION                            1
 #define configUSE_RECURSIVE_MUTEXES                     1
 #define configUSE_TIMERS                                1
-#define configMAX_PRIORITIES                            10
-#define configTIMER_TASK_PRIORITY                       (configMAX_PRIORITIES - 1)
+#define configMAX_PRIORITIES                            ( 10 )
+#define configTIMER_TASK_PRIORITY                       ( configMAX_PRIORITIES-1 )
 
 #endif /* __HEADER_FREERTOSCONFIG_H__ */

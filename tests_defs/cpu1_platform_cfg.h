@@ -49,6 +49,8 @@
 #include <limits.h>
 #elif (defined(__arm__) && !defined(__linux__))
 //pass
+#elif (defined(__riscv))
+// pass
 #else
 #error Unknown target platform
 #endif
@@ -740,6 +742,8 @@
 #endif
 #elif (defined(__arm__) && !defined(__linux__))
 #define CFE_PLATFORM_ES_DEFAULT_STACK_SIZE 2048
+#elif (defined(__riscv))
+#define CFE_PLATFORM_ES_DEFAULT_STACK_SIZE 8192
 #else
 #error Unknown target platform
 #endif
@@ -1819,6 +1823,8 @@
 #define CFE_PSP_RESERVED_MEMORY_SIZE (4 *1024 * 1024)
 #elif (defined(__arm__) && !defined(__linux__))
 #define CFE_PSP_RESERVED_MEMORY_SIZE (90 * 1024) // 107
+#elif (defined(__riscv))
+#define CFE_PSP_RESERVED_MEMORY_SIZE (90 * 1024)
 #else
 #error Unknown target platform
 #endif

@@ -1,3 +1,9 @@
 [submodule "osal"]
 	path = osal
 	url = https://github.com/projetoChi2p/fs-nasa-cfs-osal.git
+[submodule "third-party/third-party/freertos-v10.5.1"]
+	path = third-party/third-party/freertos-v10.5.1
+	url = https://github.com/FreeRTOS/FreeRTOS-Kernel.git
+[submodule "third-party/freertos-v10.5.1"]
+	path = third-party/freertos-v10.5.1
+	url = https://github.com/FreeRTOS/FreeRTOS-Kernel.git

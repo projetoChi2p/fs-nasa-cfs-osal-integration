@@ -5,8 +5,8 @@ THIS_SCRIPT_FULLNAME=$(realpath "$THIS_SCRIPT")
 THIS_SCRIPT=$(basename "${THIS_SCRIPT_FULLNAME}")
 ROOT_DIR=$(dirname "$THIS_SCRIPT_FULLNAME")
 
-PATH_TOOLCHAIN_FILE="../tests_defs/toolchain-i386-freertos-linux.cmake"
-BUILD_DIR="build_osal-tests-linux-freertos"
+PATH_TOOLCHAIN_FILE="../tests_defs/toolchain-i686-linux-gnu.cmake"
+BUILD_DIR="build_osal-tests-linux-posix"
 
 cd ${ROOT_DIR}
 
@@ -37,6 +37,8 @@ cd ${BUILD_DIR}
 
 # Set Make verbose
 export VERBOSE=1
+
+#    --trace \
 
 cmake \
     -DENABLE_UNIT_TESTS=true \
