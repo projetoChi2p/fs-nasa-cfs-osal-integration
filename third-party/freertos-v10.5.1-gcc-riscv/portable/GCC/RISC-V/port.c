@@ -106,8 +106,9 @@ size_t xTaskReturnAddress = ( size_t ) portTASK_RETURN_ADDRESS;
  * the stack overflow hook function (because the stack overflow hook is specific
  * to a task stack, not the ISR stack). */
 #if defined( configISR_STACK_SIZE_WORDS ) && ( configCHECK_FOR_STACK_OVERFLOW > 2 )
-    #warning This path not tested, or even compiled yet. See also vPortEnterTimerInterrupt().
-
+    /* The ISR overflow checking was tested with Microchip PolarFire SoC by 
+     * calling vPortEnterTimerInterrupt() from MTIMER interrupt handler.
+     */
     static const uint8_t ucExpectedStackBytes[] = {
                                     portISR_STACK_FILL_BYTE, portISR_STACK_FILL_BYTE, portISR_STACK_FILL_BYTE, portISR_STACK_FILL_BYTE,        \
                                     portISR_STACK_FILL_BYTE, portISR_STACK_FILL_BYTE, portISR_STACK_FILL_BYTE, portISR_STACK_FILL_BYTE,        \
