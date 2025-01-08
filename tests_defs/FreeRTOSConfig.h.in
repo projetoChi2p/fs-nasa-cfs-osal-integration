@@ -47,12 +47,21 @@
 //  d8888888888 888  T88b  888   "   888       Y88b  d88P Y88..88P 888     Y88b.  Y8b.     .d8""8b.       888   "   888       
 // d88P     888 888   T88b 888       888        "Y8888P"   "Y88P"  888      "Y888  "Y8888  888  888       888       888    
 
+
+
 #include <stdint.h>
 #include <stm32f767xx.h>
 extern uint32_t SystemCoreClock;
 #define TimebaseClock SystemCoreClock
-#define PLATFORM_STACK_MIN 128
-#define PLATFORM_HEAP_SIZE (150 * 1024) //(211 * 1024)
+
+void HLP_vSystemConfigPerfCounter( void );
+uint32_t HLP_ulSystemGetPerfCounter( void );
+#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()          HLP_vSystemConfigPerfCounter()
+#define portGET_RUN_TIME_COUNTER_VALUE()                  HLP_ulSystemGetPerfCounter()
+
+
+#define configAPPLICATION_ALLOCATED_HEAP 1
+
 
 #ifdef __NVIC_PRIO_BITS
 #define configPRIO_BITS         __NVIC_PRIO_BITS
@@ -87,10 +96,6 @@ extern uint32_t SystemCoreClock;
 
 #define TimebaseClock SystemCoreClock
 
-/* The stack size being passed is equal to the minimum stack size needed by pthread_create(). */
-#define PLATFORM_STACK_MIN PTHREAD_STACK_MIN
-#define PLATFORM_HEAP_SIZE ( (size_t)((256*1024)+(2048*512)) )
-
 #define configPRIO_BITS         4        /* 15 priority levels */
 
 
@@ -106,9 +111,16 @@ extern uint32_t SystemCoreClock;
 // 888  T88b    888   Y88b  d88P Y88b  d88P         Y888P          Y88b  d88P       888  
 // 888   T88b 8888888  "Y8888P"   "Y8888P"           Y8P            "Y8888P"        888  
 
+#include <stdint.h>
 /* PolarFire HAL includes. */
 #include "mpfs_hal/mss_hal.h"
 #include "drivers/mss/mss_mmuart/mss_uart.h"
+
+void HLP_vSystemConfigPerfCounter( void );
+uint32_t HLP_ulSystemGetPerfCounter( void );
+#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()          HLP_vSystemConfigPerfCounter()
+#define portGET_RUN_TIME_COUNTER_VALUE()                  HLP_ulSystemGetPerfCounter()
+
 
 
 /* FBV 2024-11-30 Ambiguity on CLINT timebase frequency.
@@ -151,7 +163,7 @@ extern uint32_t SystemCoreClock;
  */
 #define TimebaseClock LIBERO_SETTING_MSS_RTC_TOGGLE_CLK
 
-#define PLATFORM_STACK_MIN ((unsigned short )512)
+
 /* FBV 2024-11-30 When built for OSAL tests, symbol API test requires 
    a RAMDISK with 2048 blocks of 512 bytes.
    For OSAL tests:
@@ -168,8 +180,7 @@ extern uint32_t SystemCoreClock;
    - cFS RAMDISK resides in static PSP reserved memory region, 
      aside CDS, Boot record, etc.
  */
-//#define PLATFORM_HEAP_SIZE                   ( ( size_t ) ( 700 * 1024 ) )
-#define PLATFORM_HEAP_SIZE                      ( (size_t)((256*1024)+(2048*512)) )
+//#define PLATFORM_HEAP_SIZE                      ( (size_t)((256*1024)+(2048*512)) )
 
 #define CLINT_CTRL_ADDR                         ( 0x02000000UL )
 #define configMTIME_BASE_ADDRESS                ( CLINT_CTRL_ADDR + 0xBFF8UL )
@@ -185,7 +196,7 @@ extern uint32_t SystemCoreClock;
  *
  */
 /* For RV64 stack word is uint64_t */
-#define configISR_STACK_SIZE_WORDS  ( 1024/8 )
+#define configISR_STACK_SIZE_WORDS  ( (4*1024) / 8 )
 
 #define configAPPLICATION_ALLOCATED_HEAP 1
 
@@ -212,7 +223,6 @@ extern uint32_t SystemCoreClock;
 // Default is 1
 #define configTASK_NOTIFICATION_ARRAY_ENTRIES   3
 
-
 #else
 
 #error Unknown/Unsupported/Untested target platform/compiler
@@ -233,6 +243,8 @@ extern uint32_t SystemCoreClock;
 #define portINLINE         __inline
 #endif
 
+#define PLATFORM_STACK_MIN_WORDS           ( @FREERTOS_PLATFORM_STACK_MIN_WORDS@ )
+#define PLATFORM_HEAP_SIZE_BYTES           ( ( size_t ) ( @FREERTOS_PLATFORM_HEAP_SIZE_BYTES@ ) )
 
 
 // debugging
@@ -247,6 +259,10 @@ extern void vAssertCalled( const char * const pcFileName,
 #define configASSERT( x )    if( ( x ) == 0 ) vAssertCalled( __FILE__, __LINE__ )
 
 #define configUSE_TRACE_FACILITY                        1
+#define configUSE_STATS_FORMATTING_FUNCTIONS            1  // human readable stats
+
+#define configGENERATE_RUN_TIME_STATS                   1
+//#define configRUN_TIME_COUNTER_TYPE                       uint64_t
 
 // clock
 #define configCPU_CLOCK_HZ                              ( TimebaseClock )
@@ -255,10 +271,8 @@ extern void vAssertCalled( const char * const pcFileName,
 // memory
 #define configSUPPORT_DYNAMIC_ALLOCATION                1
 #define configSUPPORT_STATIC_ALLOCATION                 1
-#define configTOTAL_HEAP_SIZE                           PLATFORM_HEAP_SIZE
-#define configMINIMAL_STACK_SIZE                        ( ( unsigned short ) PLATFORM_STACK_MIN )
-
-#define configTIMER_TASK_STACK_DEPTH                    ( configMINIMAL_STACK_SIZE )
+#define configTOTAL_HEAP_SIZE                           PLATFORM_HEAP_SIZE_BYTES
+#define configMINIMAL_STACK_SIZE                        ( ( unsigned short ) PLATFORM_STACK_MIN_WORDS )
 
 
 /* FBV 2014-12-1 on stack checking and stack used by ISRs
@@ -275,13 +289,13 @@ extern void vAssertCalled( const char * const pcFileName,
 
 // hooks
 #define configUSE_DAEMON_TASK_STARTUP_HOOK              0
-#define configUSE_IDLE_HOOK                             0
+#define configUSE_IDLE_HOOK                             1
 #define configUSE_MALLOC_FAILED_HOOK                    1  // https://www.freertos.org/a00016.html
 #define configUSE_TICK_HOOK                             1
 
 // additional functions
 #define INCLUDE_eTaskGetState                           1
-#define INCLUDE_uxTaskGetStackHighWaterMark             0
+#define INCLUDE_uxTaskGetStackHighWaterMark             1
 #define INCLUDE_uxTaskGetStackHighWaterMark2            0
 #define INCLUDE_uxTaskPriorityGet                       1
 #define INCLUDE_vTaskCleanUpResources                   0
@@ -293,7 +307,7 @@ extern void vAssertCalled( const char * const pcFileName,
 #define INCLUDE_xSemaphoreGetMutexHolder                1
 #define INCLUDE_xTaskAbortDelay                         0
 #define INCLUDE_xTaskGetHandle                          1
-#define INCLUDE_xTaskGetIdleTaskHandle                  0
+#define INCLUDE_xTaskGetIdleTaskHandle                  1 // set to 1 to support runtime stats for debugging
 #define INCLUDE_xTaskGetSchedulerState                  1
 #define INCLUDE_xTimerGetTimerDaemonTaskHandle          0
 #define INCLUDE_xTimerPendFunctionCall                  0
@@ -322,5 +336,6 @@ extern void vAssertCalled( const char * const pcFileName,
 #define configUSE_TIMERS                                1
 #define configMAX_PRIORITIES                            ( 10 )
 #define configTIMER_TASK_PRIORITY                       ( configMAX_PRIORITIES-1 )
+#define configTIMER_TASK_STACK_DEPTH                    ( configMINIMAL_STACK_SIZE )
 
 #endif /* __HEADER_FREERTOSCONFIG_H__ */

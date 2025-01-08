@@ -19,20 +19,13 @@ SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE   NEVER)
 
 # These variable settings are specific to cFE/OSAL and determines which 
 # abstraction layers are built when using this toolchain
-set(OSAL_SYSTEM_BSPTYPE     "generic-linux")
+SET(OSAL_SYSTEM_BSPTYPE     "generic-linux")
 SET(OSAL_SYSTEM_OSTYPE      "posix")
 
 GET_FILENAME_COMPONENT(MY_MISSION_DEFS_DIR "${CMAKE_CURRENT_LIST_FILE}"     DIRECTORY)
 GET_FILENAME_COMPONENT(TOP_PROJECT_DIR     "${MY_MISSION_DEFS_DIR}/../"     REALPATH )
 GET_FILENAME_COMPONENT(OSAL_SOURCE_DIR     "${TOP_PROJECT_DIR}/osal"        REALPATH )
-GET_FILENAME_COMPONENT(PSP_SOURCE_DIR      "${TOP_PROJECT_DIR}/psp"         REALPATH )
-GET_FILENAME_COMPONENT(CFE_SOURCE_DIR      "${TOP_PROJECT_DIR}/cfe"         REALPATH )
 
-message("+++ Inside cmake list ${CMAKE_CURRENT_LIST_FILE}.")
-message("+++ Inside toolchain cmake ${CMAKE_CURRENT_LIST_FILE}.")
-message("+++ Using MY_MISSION_DEFS_DIR '${MY_MISSION_DEFS_DIR}'.")
-message("+++ Using TOP_PROJECT_DIR '${TOP_PROJECT_DIR}'.")
-message("+++ Using OSAL_SOURCE_DIR '${OSAL_SOURCE_DIR}'.")
 
 # OSAL
 include_directories(${OSAL_SOURCE_DIR}/src/os/shared/inc)

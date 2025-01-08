@@ -129,6 +129,12 @@ list(APPEND cpu1_EMBED_FILELIST
 )
 
 
+set(OSAL_CONFIG_CONSOLE_ASYNC                   FALSE
+    CACHE BOOL "Controls spawning of a separate utility task for OS_printf"
+)
+
+set(OSAL_CONFIG_PRINTF_CONSOLE_NAME "C:")
+
 #set(TGT1_STATIC_SYMLIST SAMPLE_AppMain,SAMPLE_APP)
 #  <cpuname>_STATIC_SYMLIST : list of symbols to include in the OSAL static
 #       symbol lookup table.  Each entry is a comma-separated pair containing
