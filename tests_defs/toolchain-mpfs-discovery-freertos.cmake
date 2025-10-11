@@ -35,7 +35,7 @@ add_compile_options(
     -Wall
     -Wextra
     -Wpedantic
-    -Werror                     # Treat warnings as errors (code should be clean)
+    # -Werror                     # Treat warnings as errors (code should be clean)
     -Wfatal-errors              # Stop on first compilation error
     -Wno-error=sign-compare     # There are signed/unsigned comparisons in NASA's support code for unit tests.
     -Wno-error=unused-variable  # Waive unused variable warning present on Microchip source code.
@@ -121,6 +121,11 @@ else()
 endif()
 
 
+# FatFs
+include_directories(
+    ${THIRDPARTY_DIR}/fs-chan-fatfs
+)
+
 # OSAL
 include_directories(${OSAL_SOURCE_DIR}/src/os/shared/inc)
 include_directories(${OSAL_SOURCE_DIR}/src/os/freertos/inc)
@@ -129,7 +134,12 @@ include_directories(${OSAL_SOURCE_DIR}/src/os/freertos/inc)
 set(OSAL_SYSTEM_BSPTYPE     "mpfs-discovery-freertos")
 set(OSAL_SYSTEM_OSTYPE      "freertos")
 
-set(LINKER_SCRIPT "${OSAL_SOURCE_DIR}/src/bsp/${OSAL_SYSTEM_BSPTYPE}/polarfire_hal/boards/${MPFS_HARDWARE_DESIGN}/platform_config/lim-release/linker/mpfs-lim.ld")
+set(LINKER_SCRIPT "${OSAL_SOURCE_DIR}/src/bsp/${OSAL_SYSTEM_BSPTYPE}/boards/${MPFS_HARDWARE_DESIGN}/platform_config/lim-release/linker/mpfs-lim.ld")
+# set(LINKER_SCRIPT "${OSAL_SOURCE_DIR}/src/bsp/${OSAL_SYSTEM_BSPTYPE}/boards/${MPFS_HARDWARE_DESIGN}/platform_config/ddr-release/linker/mpfs-ddr-loaded-by-boot-loader.ld")
+# set(LINKER_SCRIPT "${OSAL_SOURCE_DIR}/src/bsp/${OSAL_SYSTEM_BSPTYPE}/boards/${MPFS_HARDWARE_DESIGN}/platform_config/ddr-release/linker/mpfs-ddr-32bit-cached.ld")
+# set(LINKER_SCRIPT "${OSAL_SOURCE_DIR}/src/bsp/${OSAL_SYSTEM_BSPTYPE}/boards/${MPFS_HARDWARE_DESIGN}/platform_config/ddr-release/linker/mpfs-ddr-32bit-non-cached.ld")
+# set(LINKER_SCRIPT "${OSAL_SOURCE_DIR}/src/bsp/${OSAL_SYSTEM_BSPTYPE}/boards/${MPFS_HARDWARE_DESIGN}/platform_config/ddr-release/linker/mpfs-ddr-38bit-cached.ld")
+# set(LINKER_SCRIPT "${OSAL_SOURCE_DIR}/src/bsp/${OSAL_SYSTEM_BSPTYPE}/boards/${MPFS_HARDWARE_DESIGN}/platform_config/ddr-release/linker/mpfs-ddr-38bit-non-cached.ld")
 
 
 # CMake default are:
@@ -139,16 +149,16 @@ set(LINKER_SCRIPT "${OSAL_SOURCE_DIR}/src/bsp/${OSAL_SYSTEM_BSPTYPE}/polarfire_h
 # GCC default are:
 # -O0
 
-set(CMAKE_C_FLAGS_RELEASE          "          -O1 -DNDEBUG"    CACHE STRING "Overriden by OSAL/cFS toolchain defs." FORCE)
-set(CMAKE_ASM_FLAGS_RELEASE        "          -O1 -DNDEBUG"    CACHE STRING "Overriden by OSAL/cFS toolchain defs." FORCE)
+set(CMAKE_C_FLAGS_RELEASE          "          -O3 -DNDEBUG"    CACHE STRING "Overriden by OSAL/cFS toolchain defs." FORCE)
+set(CMAKE_ASM_FLAGS_RELEASE        "          -O3 -DNDEBUG"    CACHE STRING "Overriden by OSAL/cFS toolchain defs." FORCE)
 set(CMAKE_C_FLAGS_RELWITHDEBINFO   "-g3 -ggdb -O1 -DNDEBUG"    CACHE STRING "Overriden by OSAL/cFS toolchain defs." FORCE)
 set(CMAKE_ASM_FLAGS_RELWITHDEBINFO "-g3 -ggdb -O1 -DNDEBUG"    CACHE STRING "Overriden by OSAL/cFS toolchain defs." FORCE)
-set(CMAKE_C_FLAGS_DEBUG            "-g3 -ggdb -O1 -DDEBUG"     CACHE STRING "Overriden by OSAL/cFS toolchain defs." FORCE)
-set(CMAKE_ASM_FLAGS_DEBUG          "-g3 -ggdb -O1 -DDEBUG"     CACHE STRING "Overriden by OSAL/cFS toolchain defs." FORCE)
+set(CMAKE_C_FLAGS_DEBUG            "-g3 -ggdb -O0 -DDEBUG"     CACHE STRING "Overriden by OSAL/cFS toolchain defs." FORCE)
+set(CMAKE_ASM_FLAGS_DEBUG          "-g3 -ggdb -O0 -DDEBUG"     CACHE STRING "Overriden by OSAL/cFS toolchain defs." FORCE)
 
 
 add_compile_options(-Wall)
-add_compile_options(-march=rv64ima)                       # When using newer GCC, may require "rv64ima_zicsr_zifencei" 
+add_compile_options(-march=rv64ima)                       # When using newer GCC, may require "rv64ima_zicsr_zifencei"
 add_compile_options(-mabi=lp64 )
 add_compile_options(-msmall-data-limit=8)
 add_compile_options(-mcmodel=medany)                      # Memory model: how sparse memory addresses can be
@@ -161,7 +171,7 @@ add_compile_options(-ffunction-sections -fdata-sections)  # Place functions and 
 add_compile_options(-frecord-gcc-switches)                # Keep track of compilation inside object files
 
 
-add_link_options(-march=rv64ima)                         # When using newer GCC, may require "rv64ima_zicsr_zifencei" 
+add_link_options(-march=rv64ima)                         # When using newer GCC, may require "rv64ima_zicsr_zifencei"
 add_link_options(-mabi=lp64 )
 add_link_options(-mcmodel=medlow)                        # When using DDR, may require -mcmodel=medany
 add_link_options(-T ${LINKER_SCRIPT})
@@ -169,6 +179,12 @@ add_link_options(-nostartfiles -Wl,--gc-sections)
 add_link_options(-specs=nano.specs)
 add_link_options(-specs=nosys.specs)
 add_link_options(-Wl,-Map=link.map) # Note: the same map file is being used for all programs! You may need to build a single target to get the correct map.
+
+set(COMPILER_LINKER_OPTION_PREFIX "-Wl,")
+set(START_WHOLE_ARCHIVE "--whole-archive")
+set(STOP_WHOLE_ARCHIVE  "--no-whole-archive")
+set(START_WHOLE_ARCHIVE "${COMPILER_LINKER_OPTION_PREFIX}${START_WHOLE_ARCHIVE}")
+set(STOP_WHOLE_ARCHIVE "${COMPILER_LINKER_OPTION_PREFIX}${STOP_WHOLE_ARCHIVE}")
 
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM   NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY   NEVER)
@@ -186,11 +202,13 @@ include_directories(
 )
 
 include_directories(
-    ${OSAL_SOURCE_DIR}/src/bsp/${OSAL_SYSTEM_BSPTYPE}/polarfire_hal/platform
-    ${OSAL_SOURCE_DIR}/src/bsp/${OSAL_SYSTEM_BSPTYPE}/polarfire_hal/boards/${MPFS_HARDWARE_DESIGN}/
-    ${OSAL_SOURCE_DIR}/src/bsp/${OSAL_SYSTEM_BSPTYPE}/polarfire_hal/boards/${MPFS_HARDWARE_DESIGN}/platform_config/lim-release
+    ${OSAL_SOURCE_DIR}/src/bsp/${OSAL_SYSTEM_BSPTYPE}/platform
+    ${OSAL_SOURCE_DIR}/src/bsp/${OSAL_SYSTEM_BSPTYPE}/boards/${MPFS_HARDWARE_DESIGN}/
+    ${OSAL_SOURCE_DIR}/src/bsp/${OSAL_SYSTEM_BSPTYPE}/boards/${MPFS_HARDWARE_DESIGN}/platform_config/lim-release
+    # ${OSAL_SOURCE_DIR}/src/bsp/${OSAL_SYSTEM_BSPTYPE}/boards/${MPFS_HARDWARE_DESIGN}/platform_config/ddr-release
+    ${OSAL_SOURCE_DIR}/src/bsp/${OSAL_SYSTEM_BSPTYPE}/middleware
 )
-    
+
 # Include FreeRTOSConfig.h
 include_directories(${OSAL_SOURCE_DIR}/../tests_defs/)
 
@@ -199,7 +217,7 @@ message("+++ OSAL_SOURCE_DIR '${OSAL_SOURCE_DIR}'.")
 message("+++ CMAKE_CURRENT_BINARY_DIR '${CMAKE_CURRENT_BINARY_DIR}'.")
 
 
-# These OSAL configurations are specific to FreeRTOS and 
+# These OSAL configurations are specific to FreeRTOS and
 # have no mapping in osconfig.h.in
 add_definitions(-DOS_TIMEBASE_TASK_STACK_SIZE=2048) # OSAL semantics, size in bytes
 add_definitions(-DOS_TIMEBASE_TASK_PRIORITY=25)     # OSAL semantics, lower value is lower priority

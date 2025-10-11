@@ -34,18 +34,19 @@ cd ${BUILD_DIR}
 
 # CMake valid build types are: Debug, Release, RelWithDebInfo and MinSizeRel
 # See ...defs/toolchain-${SIMULATION}.cmake for occasional overrides on CMAKE_FLAGS_*
+BUILDTYPE=Debug
+# BUILDTYPE=Release
 
 # Set Make verbose
 export VERBOSE=1
 
 cmake \
     -DENABLE_UNIT_TESTS=true \
+    -DCMAKE_BUILD_TYPE=${BUILDTYPE} \
     -DCMAKE_TOOLCHAIN_FILE=${PATH_TOOLCHAIN_FILE} \
     -DOSAL_CONFIG_DEBUG_PERMISSIVE_MODE=TRUE \
     -DOSAL_CONFIG_DEBUG_PRINTF=true \
-    -DCMAKE_BUILD_TYPE=Debug \
-    -G "Unix Makefiles" \
-    --trace \
-    ../osal
+    ../osal/
 
-make ${TARGET_PROG}
+make \
+    ${TARGET_PROG}
