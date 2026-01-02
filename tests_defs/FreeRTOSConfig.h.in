@@ -111,17 +111,11 @@ uint32_t HLP_ulSystemGetPerfCounter( void );
 // 888  T88b    888   Y88b  d88P Y88b  d88P         Y888P          Y88b  d88P       888  
 // 888   T88b 8888888  "Y8888P"   "Y8888P"           Y8P            "Y8888P"        888  
 
-#include <stdint.h>
+#ifdef MPFS_DISCOVERY_KIT
+
 /* PolarFire HAL includes. */
 #include "mpfs_hal/mss_hal.h"
 #include "drivers/mss/mss_mmuart/mss_uart.h"
-
-void HLP_vSystemConfigPerfCounter( void );
-uint32_t HLP_ulSystemGetPerfCounter( void );
-#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()          HLP_vSystemConfigPerfCounter()
-#define portGET_RUN_TIME_COUNTER_VALUE()                  HLP_ulSystemGetPerfCounter()
-
-
 
 /* FBV 2024-11-30 Ambiguity on CLINT timebase frequency.
  *
@@ -163,6 +157,25 @@ uint32_t HLP_ulSystemGetPerfCounter( void );
  */
 #define TimebaseClock LIBERO_SETTING_MSS_RTC_TOGGLE_CLK
 
+#define CLINT_CTRL_ADDR                         ( 0x02000000UL )
+
+#endif /* MPFS_DISCOVERY_KIT */
+
+
+#ifdef RISCV_NOELV
+
+#define CLINT_CTRL_ADDR                         ( 0xE0000000UL )
+#define TimebaseClock                           ( ( unsigned long ) CPU_FREQUENCY )
+
+#endif /* RISCV_NOELV */
+
+#include <stdint.h>
+/* FBV 2025-12-31 configRUN_TIME_COUNTER_TYPE defaults to uint32_t */
+uint32_t HLP_ulSystemGetPerfCounter( void );
+void HLP_vSystemConfigPerfCounter( void );
+#define portGET_RUN_TIME_COUNTER_VALUE()                  HLP_ulSystemGetPerfCounter()
+#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()          HLP_vSystemConfigPerfCounter()
+
 
 /* FBV 2024-11-30 When built for OSAL tests, symbol API test requires 
    a RAMDISK with 2048 blocks of 512 bytes.
@@ -182,7 +195,7 @@ uint32_t HLP_ulSystemGetPerfCounter( void );
  */
 //#define PLATFORM_HEAP_SIZE                      ( (size_t)((256*1024)+(2048*512)) )
 
-#define CLINT_CTRL_ADDR                         ( 0x02000000UL )
+
 #define configMTIME_BASE_ADDRESS                ( CLINT_CTRL_ADDR + 0xBFF8UL )
 #define configMTIMECMP_BASE_ADDRESS             ( CLINT_CTRL_ADDR + 0x4000UL )
 
