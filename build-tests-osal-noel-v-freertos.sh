@@ -5,8 +5,8 @@ THIS_SCRIPT_FULLNAME=$(realpath "$THIS_SCRIPT")
 THIS_SCRIPT=$(basename "${THIS_SCRIPT_FULLNAME}")
 ROOT_DIR=$(dirname "$THIS_SCRIPT_FULLNAME")
 
-PATH_TOOLCHAIN_FILE="../tests_defs/toolchain-mpfs-discovery-freertos.cmake"
-BUILD_DIR="build_osal-tests-mpfs-discovery-freertos"
+PATH_TOOLCHAIN_FILE="../tests_defs/toolchain-riscv-noel-v-freertos.cmake"
+BUILD_DIR="build_osal-tests-riscv-noel-v-freertos"
 
 cd ${ROOT_DIR}
 

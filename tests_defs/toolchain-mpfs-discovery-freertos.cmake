@@ -55,6 +55,8 @@ find_program(CMAKE_C_COMPILER
   HINTS
     "$ENV{HOME}/Microchip/SoftConsole-v2022.2-RISC-V-747/riscv-unknown-elf-gcc/bin/"
     "/opt/Microchip/SoftConsole-v2022.2-RISC-V-747/riscv-unknown-elf-gcc/bin/"
+    "/opt/riscv-gnu-toolchain-12.2.0-2023.07.07/bin/"
+    "/opt/riscv-gnu-toolchain-15.1.0-2025.12.27-multilib/bin/" # GCC 15 does not declare CSR alias for mtval as mbadaddr
   DOC "Find GNU GCC Toolchain"
   REQUIRED
 )
@@ -100,6 +102,23 @@ message("+++ Using OSAL_FREERTOS_SRC_DIR '${OSAL_FREERTOS_SRC_DIR}'.")
 message("+++ Using OSAL_SOURCE_DIR '${OSAL_SOURCE_DIR}'.")
 
 
+execute_process(
+    COMMAND ${CMAKE_C_COMPILER} -dumpfullversion -dumpversion
+    OUTPUT_VARIABLE GCC_VERSION
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+string(COMPARE GREATER_EQUAL "${GCC_VERSION}" "12.0.0" GCC_USE_STRICT_EXTENSIONS)
+if (${GCC_USE_STRICT_EXTENSIONS})
+    set(RISCV_MARCH rv64imac_zicsr_zifencei)
+    set(RISCV_MABI  lp64)
+else()
+    set(RISCV_MARCH rv64imac)
+    set(RISCV_MABI  lp64)
+endif()
+
+message("+++ GCC version is '${GCC_VERSION}'.")
+
 # FreeRTOS
 include_directories(
     ${OSAL_FREERTOS_INC_DIR}
@@ -123,7 +142,7 @@ endif()
 
 # FatFs
 include_directories(
-    ${THIRDPARTY_DIR}/fs-chan-fatfs
+    ${THIRDPARTY_DIR}/fatfs
 )
 
 # OSAL
@@ -158,8 +177,8 @@ set(CMAKE_ASM_FLAGS_DEBUG          "-g3 -ggdb -O0 -DDEBUG"     CACHE STRING "Ove
 
 
 add_compile_options(-Wall)
-add_compile_options(-march=rv64ima)                       # When using newer GCC, may require "rv64ima_zicsr_zifencei"
-add_compile_options(-mabi=lp64 )
+add_compile_options(-march=${RISCV_MARCH})                # When using newer GCC, may require "rv64ima_zicsr_zifencei"
+add_compile_options(-mabi=${RISCV_MABI})
 add_compile_options(-msmall-data-limit=8)
 add_compile_options(-mcmodel=medany)                      # Memory model: how sparse memory addresses can be
 add_compile_options(-mstrict-align)                       # Memory access alignment
@@ -171,9 +190,9 @@ add_compile_options(-ffunction-sections -fdata-sections)  # Place functions and 
 add_compile_options(-frecord-gcc-switches)                # Keep track of compilation inside object files
 
 
-add_link_options(-march=rv64ima)                         # When using newer GCC, may require "rv64ima_zicsr_zifencei"
-add_link_options(-mabi=lp64 )
-add_link_options(-mcmodel=medlow)                        # When using DDR, may require -mcmodel=medany
+add_link_options(-march=${RISCV_MARCH})                   # When using newer GCC, may require "rv64ima_zicsr_zifencei"
+add_link_options(-mabi=${RISCV_MABI})
+add_link_options(-mcmodel=medlow)                         # When using DDR, may require -mcmodel=medany
 add_link_options(-T ${LINKER_SCRIPT})
 add_link_options(-nostartfiles -Wl,--gc-sections)
 add_link_options(-specs=nano.specs)
@@ -208,9 +227,6 @@ include_directories(
     # ${OSAL_SOURCE_DIR}/src/bsp/${OSAL_SYSTEM_BSPTYPE}/boards/${MPFS_HARDWARE_DESIGN}/platform_config/ddr-release
     ${OSAL_SOURCE_DIR}/src/bsp/${OSAL_SYSTEM_BSPTYPE}/middleware
 )
-
-# Include FreeRTOSConfig.h
-include_directories(${OSAL_SOURCE_DIR}/../tests_defs/)
 
 
 message("+++ OSAL_SOURCE_DIR '${OSAL_SOURCE_DIR}'.")

@@ -5,8 +5,8 @@ THIS_SCRIPT_FULLNAME=$(realpath "$THIS_SCRIPT")
 THIS_SCRIPT=$(basename "${THIS_SCRIPT_FULLNAME}")
 ROOT_DIR=$(dirname "$THIS_SCRIPT_FULLNAME")
 
-PATH_TOOLCHAIN_FILE="../tests_defs/toolchain-mpfs-discovery-freertos.cmake"
-BUILD_DIR="build_osal-mpfs-discovery-freertos"
+PATH_TOOLCHAIN_FILE="../tests_defs/toolchain-riscv-noel-v-freertos.cmake"
+BUILD_DIR="build_osal-riscv-noel-v-freertos"
 
 cd ${ROOT_DIR}
 
@@ -25,7 +25,16 @@ fi
 mkdir -p ${BUILD_DIR}
 cd ${BUILD_DIR}
 
+# CMake valid build types are: Debug, Release, RelWithDebInfo and MinSizeRel
+# See ...defs/toolchain-${SIMULATION}.cmake for occasional overrides on CMAKE_FLAGS_*
+BUILDTYPE=Debug
+# BUILDTYPE=Release
+
+# Set Make verbose
+export VERBOSE=1
+
 cmake \
+    -DCMAKE_BUILD_TYPE=${BUILDTYPE} \
     -DCMAKE_TOOLCHAIN_FILE=${PATH_TOOLCHAIN_FILE} \
     -DOSAL_CONFIG_DEBUG_PRINTF=true \
     ../osal
